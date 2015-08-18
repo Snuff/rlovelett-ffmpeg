@@ -4,8 +4,8 @@ require 'multi_json'
 module FFMPEG
   class Movie
     attr_reader :path, :duration, :time, :bitrate, :rotation, :creation_time
-    attr_reader :video_stream, :video_codec, :video_bitrate, :colorspace, :width, :height, :sar, :dar, :frame_rate
-    attr_reader :audio_stream, :audio_codec, :audio_bitrate, :audio_sample_rate, :audio_channels
+    attr_reader :video_stream_data, :video_stream, :video_codec, :video_bitrate, :colorspace, :width, :height, :sar, :dar, :frame_rate
+    attr_reader :audio_stream_data, :audio_stream, :audio_codec, :audio_bitrate, :audio_sample_rate, :audio_channels
     attr_reader :container
 
     def initialize(path)
@@ -53,25 +53,25 @@ module FFMPEG
 
         unless video_streams.empty?
           # TODO: Handle multiple video codecs (is that possible?)
-          video_stream = video_streams.first
-          @video_codec = video_stream[:codec_name]
-          @colorspace = video_stream[:pix_fmt]
-          @width = video_stream[:width]
-          @height = video_stream[:height]
-          @video_bitrate = video_stream[:bit_rate].to_i
-          @sar = video_stream[:sample_aspect_ratio]
-          @dar = video_stream[:display_aspect_ratio]
+          @video_stream_data = video_streams.first
+          @video_codec = video_stream_data[:codec_name]
+          @colorspace = video_stream_data[:pix_fmt]
+          @width = video_stream_data[:width]
+          @height = video_stream_data[:height]
+          @video_bitrate = video_stream_data[:bit_rate].to_i
+          @sar = video_stream_data[:sample_aspect_ratio]
+          @dar = video_stream_data[:display_aspect_ratio]
 
-          @frame_rate = unless video_stream[:avg_frame_rate] == '0/0'
-                          Rational(video_stream[:avg_frame_rate])
+          @frame_rate = unless video_stream_data[:avg_frame_rate] == '0/0'
+                          Rational(video_stream_data[:avg_frame_rate])
                         else
                           nil
                         end
 
-          @video_stream = "#{video_stream[:codec_name]} (#{video_stream[:profile]}) (#{video_stream[:codec_tag_string]} / #{video_stream[:codec_tag]}), #{colorspace}, #{resolution} [SAR #{sar} DAR #{dar}]"
+          @video_stream = "#{video_stream_data[:codec_name]} (#{video_stream_data[:profile]}) (#{video_stream_data[:codec_tag_string]} / #{video_stream_data[:codec_tag]}), #{colorspace}, #{resolution} [SAR #{sar} DAR #{dar}]"
 
-          @rotation = if video_stream.key?(:tags) and video_stream[:tags].key?(:rotate)
-                        video_stream[:tags][:rotate].to_i
+          @rotation = if video_stream_data.key?(:tags) and video_stream_data[:tags].key?(:rotate)
+                        video_stream_data[:tags][:rotate].to_i
                       else
                         nil
                       end
@@ -79,13 +79,13 @@ module FFMPEG
 
         unless audio_streams.empty?
           # TODO: Handle multiple audio codecs
-          audio_stream = audio_streams.first
-          @audio_channels = audio_stream[:channels].to_i
-          @audio_codec = audio_stream[:codec_name]
-          @audio_sample_rate = audio_stream[:sample_rate].to_i
-          @audio_bitrate = audio_stream[:bit_rate].to_i
-          @audio_channel_layout = audio_stream[:channel_layout]
-          @audio_stream = "#{audio_codec} (#{audio_stream[:codec_tag_string]} / #{audio_stream[:codec_tag]}), #{audio_sample_rate} Hz, #{audio_channel_layout}, #{audio_stream[:sample_fmt]}, #{audio_bitrate} bit/s"
+          @audio_stream_data = audio_streams.first
+          @audio_channels = audio_stream_data[:channels].to_i
+          @audio_codec = audio_stream_data[:codec_name]
+          @audio_sample_rate = audio_stream_data[:sample_rate].to_i
+          @audio_bitrate = audio_stream_data[:bit_rate].to_i
+          @audio_channel_layout = audio_stream_data[:channel_layout]
+          @audio_stream = "#{audio_codec} (#{audio_stream_data[:codec_tag_string]} / #{audio_stream_data[:codec_tag]}), #{audio_sample_rate} Hz, #{audio_channel_layout}, #{audio_stream_data[:sample_fmt]}, #{audio_bitrate} bit/s"
         end
 
       end
